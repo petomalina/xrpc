@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package api;
+
+option go_package = "github.com/petomalina/xrpc/examples/api";
+
+import "google/api/annotations.proto";
+
+service EchoService {
+  rpc Call (EchoMessage) returns (EchoMessage) {
+    option (google.api.http) = {
+      post: "/echo"
+      body: "*"
+    };
+  }
+}
+
+message EchoMessage {
+  string message = 1;
+}
