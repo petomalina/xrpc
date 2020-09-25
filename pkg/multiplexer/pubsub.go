@@ -13,7 +13,7 @@ import (
 // IsPubSubRequest returns true if the given request is considered
 // to be made by Google servers and thus pushed by Pub/Sub service
 func IsPubSubRequest(r *http.Request) bool {
-	return strings.Contains(r.Header.Get("user-agent"), "APIs-Google")
+	return strings.Contains(r.Header.Get("user-agent"), "APIs-Google") && r.Method == http.MethodPost
 }
 
 // IsPubSubGRPCRequest returns true if the given request is considered
@@ -34,6 +34,7 @@ func PubSubHTTPHandler(handler http.Handler) Handler {
 		if err != nil {
 			_, _ = w.Write([]byte(err.Error()))
 			w.WriteHeader(http.StatusBadRequest)
+			return true
 		}
 
 		handler.ServeHTTP(w, req)
@@ -42,24 +43,24 @@ func PubSubHTTPHandler(handler http.Handler) Handler {
 }
 
 // not working yet
-func pubSubGRPCHandler(conn *grpc.ClientConn, opts ...grpc.CallOption) Handler {
+func pubSubGRPCHandler(conn *grpc.Server, opts ...grpc.CallOption) Handler {
 	return func(w http.ResponseWriter, r *http.Request) bool {
-		if strings.Contains(r.Header.Get("user-agent"), "APIs-Google") {
-			body, err := InterceptPubSubGRPC(r)
-			if err != nil {
-				_, _ = w.Write([]byte(err.Error()))
-				w.WriteHeader(http.StatusBadRequest)
-			}
-
-			err = conn.Invoke(r.Context(), r.URL.Path, &body, nil, opts...)
-			if err != nil {
-				_, _ = w.Write([]byte(err.Error()))
-				w.WriteHeader(http.StatusBadRequest)
-			}
-			return true
+		if !IsPubSubGRPCRequest(r) {
+			return false
 		}
 
-		return false
+		_, err := InterceptPubSubGRPC(r)
+		if err != nil {
+			_, _ = w.Write([]byte(err.Error()))
+			w.WriteHeader(http.StatusBadRequest)
+		}
+
+		//err = conn.Invoke(r.Context(), r.URL.Path, &body, nil, opts...)
+		//if err != nil {
+		//	_, _ = w.Write([]byte(err.Error()))
+		//	w.WriteHeader(http.StatusBadRequest)
+		//}
+		return true
 	}
 }
 
