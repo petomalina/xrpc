@@ -41,7 +41,7 @@ func createLogger() *zap.Logger {
 func createGrpcServer(logger *zap.Logger) *grpc.Server {
 	// create and register the grpc server
 	grpcServer := grpc.NewServer()
-	echoSvc := &EchoService{logger}
+	echoSvc := &EchoService{logger, nil}
 	api.RegisterEchoServiceServer(grpcServer, echoSvc)
 	reflection.Register(grpcServer)
 
@@ -71,9 +71,15 @@ func createTestServer(hh ...Handler) *http.Server {
 
 type EchoService struct {
 	*zap.Logger
+
+	onCall func(ctx context.Context, m *api.EchoMessage)
 }
 
 func (e *EchoService) Call(ctx context.Context, m *api.EchoMessage) (*api.EchoMessage, error) {
+	if e.onCall != nil {
+		e.onCall(ctx, m)
+	}
+
 	headers := metautils.ExtractIncoming(ctx)
 
 	e.Debug("A new message was received",

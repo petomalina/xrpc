@@ -2,11 +2,11 @@ package multiplexer
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/petomalina/xrpc/examples/api"
 	"github.com/stretchr/testify/suite"
-	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -41,16 +41,8 @@ func (s *PubSubHandlerSuite) TearDownTest() {
 }
 
 func (s *PubSubHandlerSuite) TestPubSubHTTPHandler() {
-	reqBody, _ := json.Marshal(goldenPubSubMessage)
-	req := &http.Request{
-		Method: http.MethodPost,
-		URL:    testingTargetEndpoint,
-		Body:   ioutil.NopCloser(bytes.NewReader(reqBody)),
-		Header: map[string][]string{
-			"User-Agent":   {"APIs-Google; (+https://developers.google.com/webmasters/APIs-Google.html)"},
-			"Content-Type": {"application/json"},
-		},
-	}
+	reqBody, _ := json.Marshal(goldenPubSubMessageJSON)
+	req := makePubSubRequest(reqBody)
 	client := &http.Client{}
 
 	res, err := client.Do(req)
@@ -64,16 +56,39 @@ func (s *PubSubHandlerSuite) TestPubSubHTTPHandler() {
 }
 
 func (s *PubSubHandlerSuite) TestPubSubGRPCHandler() {
-	conn, err := grpc.Dial(testingTarget.String(), grpc.WithInsecure())
+	// create the protobuf echo message model
+	msg := &api.EchoMessage{
+		Message: "Hello World",
+	}
+	// marshal contents of the message
+	bb, err := proto.Marshal(msg)
 	s.NoError(err)
-	client := api.NewEchoServiceClient(conn)
 
-	msg := "Hello from test"
-	res, err := client.Call(context.Background(), &api.EchoMessage{
-		Message: msg,
-	})
+	// marshal around the PubSub push message
+	reqBody, err := json.Marshal(makeGoldenPubSubMessage(bb, AttributeEncodingGRPC))
 	s.NoError(err)
-	s.Equal(msg, res.Message)
+
+	// create the http request with PubSUb message and the data within
+	req := makePubSubRequest(reqBody)
+	client := &http.Client{}
+
+	res, err := client.Do(req)
+	fmt.Println(res)
+	s.NoError(err)
+	s.NotNil(res)
+	s.Equal(http.StatusOK, res.StatusCode)
+}
+
+func makePubSubRequest(body []byte) *http.Request {
+	return &http.Request{
+		Method: http.MethodPost,
+		URL:    testingTargetEndpoint,
+		Body:   ioutil.NopCloser(bytes.NewReader(body)),
+		Header: map[string][]string{
+			"User-Agent":   {"APIs-Google; (+https://developers.google.com/webmasters/APIs-Google.html)"},
+			"Content-Type": {"application/json"},
+		},
+	}
 }
 
 func TestPubSubHandlerSuite(t *testing.T) {

@@ -15,11 +15,16 @@ type PubSubTestSuite struct {
 
 var (
 	goldenPubSubMessageData = []byte("{\"message\":\"Hello World\"}")
-	goldenPubSubMessage     = PushMessage{
+	goldenPubSubMessageJSON = makeGoldenPubSubMessage(goldenPubSubMessageData, "")
+)
+
+func makeGoldenPubSubMessage(data []byte, encoding string) PushMessage {
+	return PushMessage{
 		Message: &PubSubMessage{
-			Data: goldenPubSubMessageData,
+			Data: data,
 			Attributes: map[string]string{
 				"my-label": "this-is-value",
+				"encoding": encoding,
 			},
 			MessageID:   "abc12345",
 			PublishTime: "2014-10-02T15:01:23Z",
@@ -27,7 +32,7 @@ var (
 		},
 		Subscription: "12345",
 	}
-)
+}
 
 func (s *PubSubTestSuite) TestIsGRPCRequest() {
 	candidates := map[*http.Request]bool{
@@ -65,7 +70,7 @@ type InterceptedResult struct {
 }
 
 func (s *PubSubTestSuite) TestInterceptPubSubRequest() {
-	goldenMsgJson, _ := json.Marshal(goldenPubSubMessage)
+	goldenMsgJson, _ := json.Marshal(goldenPubSubMessageJSON)
 
 	candidates := map[*http.Request]InterceptedResult{
 		&http.Request{
@@ -74,10 +79,10 @@ func (s *PubSubTestSuite) TestInterceptPubSubRequest() {
 		}: {
 			Body: "{\"message\":\"Hello World\"}",
 			Headers: map[string]string{
-				"Grpc-Metadata-x-pubsub-subscription":         goldenPubSubMessage.Subscription,
-				"Grpc-Metadata-x-pubsub-message-id":           goldenPubSubMessage.Message.MessageID,
-				"Grpc-Metadata-x-pubsub-message-publish-time": goldenPubSubMessage.Message.PublishTime,
-				"Grpc-Metadata-x-pubsub-my-label":             goldenPubSubMessage.Message.Attributes["my-label"],
+				"Grpc-Metadata-x-pubsub-subscription":         goldenPubSubMessageJSON.Subscription,
+				"Grpc-Metadata-x-pubsub-message-id":           goldenPubSubMessageJSON.Message.MessageID,
+				"Grpc-Metadata-x-pubsub-message-publish-time": goldenPubSubMessageJSON.Message.PublishTime,
+				"Grpc-Metadata-x-pubsub-my-label":             goldenPubSubMessageJSON.Message.Attributes["my-label"],
 			},
 		},
 	}

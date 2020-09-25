@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	AttributeEncoding     = "x-pubsub-encoding"
+	AttributeEncoding     = "encoding"
+	HeaderEncoding        = "Grpc-Metadata-x-pubsub-encoding"
 	AttributeEncodingGRPC = "grpc"
 	// AttributeEncodingHTTP defines any bytes that were not recognized to be a closer protocol
 	AttributeEncodingHTTP = "http"
@@ -48,12 +49,11 @@ func PubSubHandler(hh map[string]http.Handler) Handler {
 
 		var handler http.Handler
 		var ok bool
-		if handler, ok = hh[AttributeEncodingHTTP]; !ok {
+		if handler, ok = hh[req.Header.Get(HeaderEncoding)]; !ok {
 			return false
 		}
 
 		handler.ServeHTTP(w, req)
-
 		return true
 	}
 }
@@ -102,8 +102,12 @@ func InterceptPubSubRequest(r *http.Request) (*http.Request, error) {
 	// by the grpc gateway
 	var headerPrefix = "Grpc-Metadata-"
 	if IsPubSubGRPCMessage(psmsg.Message) {
-		headerPrefix = ""
+		//headerPrefix = ""
 		// this already has the encoding attribute set to grpc
+
+		// set the content type to grpc and proto to 2 so the h2c will handle this request
+		r.Header.Set("Content-Type", "application/grpc")
+		r.ProtoMajor = 2
 	} else {
 		// set the encoding to bytes as it was not recognized closer
 		psmsg.Message.Attributes[AttributeEncoding] = AttributeEncodingHTTP
