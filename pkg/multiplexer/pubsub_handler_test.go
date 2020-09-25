@@ -2,8 +2,11 @@ package multiplexer
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"github.com/petomalina/xrpc/examples/api"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/grpc"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -20,8 +23,10 @@ func (s *PubSubHandlerSuite) SetupTest() {
 	gateway := createGrpcGatewayServer()
 
 	s.srv = createTestServer(
-		PubSubHTTPHandler(gateway),
-		//pubSubGRPCHandler(grpcServer),
+		PubSubHandler(map[string]http.Handler{
+			AttributeEncodingHTTP: gateway,
+			AttributeEncodingGRPC: grpcServer,
+		}),
 		GRPCHandler(grpcServer),
 	)
 
@@ -56,6 +61,19 @@ func (s *PubSubHandlerSuite) TestPubSubHTTPHandler() {
 	bb, err := ioutil.ReadAll(res.Body)
 	s.NoError(err)
 	s.Equal(string(goldenPubSubMessageData), string(bb))
+}
+
+func (s *PubSubHandlerSuite) TestPubSubGRPCHandler() {
+	conn, err := grpc.Dial(testingTarget.String(), grpc.WithInsecure())
+	s.NoError(err)
+	client := api.NewEchoServiceClient(conn)
+
+	msg := "Hello from test"
+	res, err := client.Call(context.Background(), &api.EchoMessage{
+		Message: msg,
+	})
+	s.NoError(err)
+	s.Equal(msg, res.Message)
 }
 
 func TestPubSubHandlerSuite(t *testing.T) {

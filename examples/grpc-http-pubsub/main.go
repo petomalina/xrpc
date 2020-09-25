@@ -49,7 +49,11 @@ func main() {
 		multiplexer.GRPCHandler(grpcServer),
 		// filters all messages with Google Agent into the gwmux and
 		// unpacks the PubSub message
-		multiplexer.PubSubHTTPHandler(gwmux),
+		multiplexer.PubSubHandler(
+			map[string]http.Handler{
+				multiplexer.AttributeEncodingHTTP: gwmux,
+			},
+		),
 		// defaults all other messages into the http multiplexer
 		multiplexer.HTTPHandler(gwmux),
 	)

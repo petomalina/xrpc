@@ -64,7 +64,7 @@ type InterceptedResult struct {
 	Error   error
 }
 
-func (s *PubSubTestSuite) TestInterceptPubSubHTTP() {
+func (s *PubSubTestSuite) TestInterceptPubSubRequest() {
 	goldenMsgJson, _ := json.Marshal(goldenPubSubMessage)
 
 	candidates := map[*http.Request]InterceptedResult{
@@ -74,16 +74,16 @@ func (s *PubSubTestSuite) TestInterceptPubSubHTTP() {
 		}: {
 			Body: "{\"message\":\"Hello World\"}",
 			Headers: map[string]string{
-				"Grpc-Metadata-x-pubsub-subscription":          goldenPubSubMessage.Subscription,
-				"Grpc-Metadata-x-pubsub-message-id":            goldenPubSubMessage.Message.MessageID,
-				"Grpc-Metadata-x-pubsub-message-pubslish-time": goldenPubSubMessage.Message.PublishTime,
-				"Grpc-Metadata-x-pubsub-my-label":              goldenPubSubMessage.Message.Attributes["my-label"],
+				"Grpc-Metadata-x-pubsub-subscription":         goldenPubSubMessage.Subscription,
+				"Grpc-Metadata-x-pubsub-message-id":           goldenPubSubMessage.Message.MessageID,
+				"Grpc-Metadata-x-pubsub-message-publish-time": goldenPubSubMessage.Message.PublishTime,
+				"Grpc-Metadata-x-pubsub-my-label":             goldenPubSubMessage.Message.Attributes["my-label"],
 			},
 		},
 	}
 
 	for req, result := range candidates {
-		intercepted, err := InterceptPubSubHTTP(req)
+		intercepted, err := InterceptPubSubRequest(req)
 		s.Equal(result.Error, err)
 
 		interceptedBody, err := ioutil.ReadAll(intercepted.Body)
