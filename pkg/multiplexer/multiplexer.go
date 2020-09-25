@@ -33,7 +33,7 @@ func Make(server *http2.Server, handlers ...Handler) http.Handler {
 			}
 		}
 
+		w.WriteHeader(http.StatusNotFound)
 		_, _ = w.Write([]byte(ErrNoHandlerFulfilled.Error()))
-		w.WriteHeader(http.StatusBadRequest)
 	}), server)
 }
