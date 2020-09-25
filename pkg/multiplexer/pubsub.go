@@ -3,6 +3,7 @@ package multiplexer
 import (
 	"bytes"
 	"encoding/json"
+	"google.golang.org/grpc"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -34,7 +35,7 @@ func IsPubSubGRPCMessage(m *PubSubMessage) bool {
 
 // PubSubHandler fulfills requests that are considered to be PubSub requests,
 // automatically unwrapping their bodies and appending metadata as headers
-func PubSubHandler(hh map[string]http.Handler) Handler {
+func PubSubHandler(hh map[string]Handler) Handler {
 	return func(w http.ResponseWriter, r *http.Request) bool {
 		if !IsPubSubRequest(r) {
 			return false
@@ -47,15 +48,25 @@ func PubSubHandler(hh map[string]http.Handler) Handler {
 			return true
 		}
 
-		var handler http.Handler
+		var handler Handler
 		var ok bool
 		if handler, ok = hh[req.Header.Get(HeaderEncoding)]; !ok {
 			return false
 		}
 
-		handler.ServeHTTP(w, req)
-		return true
+		return handler(w, req)
 	}
+}
+
+func GRPCPubSubHandler(target string, opts ...grpc.DialOption) (Handler, error) {
+	conn, err := grpc.Dial(target, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) bool {
+		return true
+	}, nil
 }
 
 // PushMessage is a definition of the Google PubSub message received as a push message
@@ -108,6 +119,7 @@ func InterceptPubSubRequest(r *http.Request) (*http.Request, error) {
 		// set the content type to grpc and proto to 2 so the h2c will handle this request
 		r.Header.Set("Content-Type", "application/grpc")
 		r.ProtoMajor = 2
+		r.ProtoMinor = 0
 	} else {
 		// set the encoding to bytes as it was not recognized closer
 		psmsg.Message.Attributes[AttributeEncoding] = AttributeEncodingHTTP
@@ -121,6 +133,9 @@ func InterceptPubSubRequest(r *http.Request) (*http.Request, error) {
 	for k, v := range psmsg.Message.Attributes {
 		r.Header.Add(headerPrefix+"x-pubsub-"+k, v)
 	}
+
+	//rr, _ := httputil.DumpRequest(r, true)
+	//fmt.Println(string(rr))
 
 	return r, nil
 }

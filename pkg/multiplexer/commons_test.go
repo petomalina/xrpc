@@ -19,8 +19,7 @@ const (
 )
 
 var (
-	testingTarget, _         = url.Parse("localhost:" + testingPort)
-	testingTargetEndpoint, _ = url.Parse("http://localhost:" + testingPort + "/echo")
+	testingTarget, _ = url.Parse("localhost:" + testingPort)
 )
 
 func createLogger() *zap.Logger {
@@ -38,11 +37,10 @@ func createLogger() *zap.Logger {
 	return logger
 }
 
-func createGrpcServer(logger *zap.Logger) *grpc.Server {
+func createGrpcServer(service *EchoService) *grpc.Server {
 	// create and register the grpc server
 	grpcServer := grpc.NewServer()
-	echoSvc := &EchoService{logger, nil}
-	api.RegisterEchoServiceServer(grpcServer, echoSvc)
+	api.RegisterEchoServiceServer(grpcServer, service)
 	reflection.Register(grpcServer)
 
 	return grpcServer

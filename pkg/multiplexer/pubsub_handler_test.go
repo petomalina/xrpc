@@ -2,30 +2,35 @@ package multiplexer
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 	"github.com/petomalina/xrpc/examples/api"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/proto"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"testing"
 )
 
 type PubSubHandlerSuite struct {
 	suite.Suite
 
-	srv *http.Server
+	srv         *http.Server
+	echoService *EchoService
 }
 
 func (s *PubSubHandlerSuite) SetupTest() {
-	grpcServer := createGrpcServer(createLogger())
+	s.echoService = &EchoService{createLogger(), nil}
+	grpcServer := createGrpcServer(s.echoService)
 	gateway := createGrpcGatewayServer()
 
 	s.srv = createTestServer(
-		PubSubHandler(map[string]http.Handler{
-			AttributeEncodingHTTP: gateway,
-			AttributeEncodingGRPC: grpcServer,
+		PubSubHandler(map[string]Handler{
+			AttributeEncodingHTTP: HTTPHandler(gateway),
+			AttributeEncodingGRPC: GRPCHandler(grpcServer),
 		}),
 		GRPCHandler(grpcServer),
 	)
@@ -42,8 +47,13 @@ func (s *PubSubHandlerSuite) TearDownTest() {
 
 func (s *PubSubHandlerSuite) TestPubSubHTTPHandler() {
 	reqBody, _ := json.Marshal(goldenPubSubMessageJSON)
-	req := makePubSubRequest(reqBody)
+	req := makePubSubRequest(reqBody, false)
 	client := &http.Client{}
+
+	//s.echoService.onCall = func(ctx context.Context, m *api.EchoMessage) {
+	//	headers := metautils.ExtractIncoming(ctx)
+	//	fmt.Println(headers)
+	//}
 
 	res, err := client.Do(req)
 	s.NoError(err)
@@ -69,20 +79,34 @@ func (s *PubSubHandlerSuite) TestPubSubGRPCHandler() {
 	s.NoError(err)
 
 	// create the http request with PubSUb message and the data within
-	req := makePubSubRequest(reqBody)
+	req := makePubSubRequest(reqBody, true)
 	client := &http.Client{}
 
+	s.echoService.onCall = func(ctx context.Context, m *api.EchoMessage) {
+		headers := metautils.ExtractIncoming(ctx)
+		fmt.Println("HEADERS:", headers)
+	}
+
 	res, err := client.Do(req)
-	fmt.Println(res)
+	fmt.Printf("%+v\n", res)
 	s.NoError(err)
 	s.NotNil(res)
 	s.Equal(http.StatusOK, res.StatusCode)
 }
 
-func makePubSubRequest(body []byte) *http.Request {
+func makePubSubRequest(body []byte, grpc bool) *http.Request {
+	uri := "http://localhost:" + testingPort
+	if grpc {
+		uri += "/api.EchoService/Call"
+	} else {
+		uri += "/echo"
+	}
+
+	u, _ := url.Parse(uri)
+
 	return &http.Request{
 		Method: http.MethodPost,
-		URL:    testingTargetEndpoint,
+		URL:    u,
 		Body:   ioutil.NopCloser(bytes.NewReader(body)),
 		Header: map[string][]string{
 			"User-Agent":   {"APIs-Google; (+https://developers.google.com/webmasters/APIs-Google.html)"},

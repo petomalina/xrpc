@@ -12,11 +12,13 @@ import (
 type GrpcHandlerSuite struct {
 	suite.Suite
 
-	srv *http.Server
+	srv         *http.Server
+	echoService *EchoService
 }
 
 func (s *GrpcHandlerSuite) SetupTest() {
-	grpcServer := createGrpcServer(createLogger())
+	s.echoService = &EchoService{createLogger(), nil}
+	grpcServer := createGrpcServer(s.echoService)
 
 	s.srv = createTestServer(
 		GRPCHandler(grpcServer),
