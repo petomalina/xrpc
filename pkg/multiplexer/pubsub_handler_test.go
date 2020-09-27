@@ -2,13 +2,8 @@ package multiplexer
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
-	"github.com/petomalina/xrpc/examples/api"
 	"github.com/stretchr/testify/suite"
-	"google.golang.org/protobuf/proto"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -28,10 +23,7 @@ func (s *PubSubHandlerSuite) SetupTest() {
 	gateway := createGrpcGatewayServer()
 
 	s.srv = createTestServer(
-		PubSubHandler(map[string]Handler{
-			AttributeEncodingHTTP: HTTPHandler(gateway),
-			AttributeEncodingGRPC: GRPCHandler(grpcServer),
-		}),
+		PubSubHandler(gateway),
 		GRPCHandler(grpcServer),
 	)
 
@@ -45,7 +37,7 @@ func (s *PubSubHandlerSuite) TearDownTest() {
 	s.NoError(s.srv.Close(), "error closing the server")
 }
 
-func (s *PubSubHandlerSuite) TestPubSubHTTPHandler() {
+func (s *PubSubHandlerSuite) TestPubSubHandler() {
 	reqBody, _ := json.Marshal(goldenPubSubMessageJSON)
 	req := makePubSubRequest(reqBody, false)
 	client := &http.Client{}
@@ -63,35 +55,6 @@ func (s *PubSubHandlerSuite) TestPubSubHTTPHandler() {
 	bb, err := ioutil.ReadAll(res.Body)
 	s.NoError(err)
 	s.Equal(string(goldenPubSubMessageData), string(bb))
-}
-
-func (s *PubSubHandlerSuite) TestPubSubGRPCHandler() {
-	// create the protobuf echo message model
-	msg := &api.EchoMessage{
-		Message: "Hello World",
-	}
-	// marshal contents of the message
-	bb, err := proto.Marshal(msg)
-	s.NoError(err)
-
-	// marshal around the PubSub push message
-	reqBody, err := json.Marshal(makeGoldenPubSubMessage(bb, AttributeEncodingGRPC))
-	s.NoError(err)
-
-	// create the http request with PubSUb message and the data within
-	req := makePubSubRequest(reqBody, true)
-	client := &http.Client{}
-
-	s.echoService.onCall = func(ctx context.Context, m *api.EchoMessage) {
-		headers := metautils.ExtractIncoming(ctx)
-		fmt.Println("HEADERS:", headers)
-	}
-
-	res, err := client.Do(req)
-	fmt.Printf("%+v\n", res)
-	s.NoError(err)
-	s.NotNil(res)
-	s.Equal(http.StatusOK, res.StatusCode)
 }
 
 func makePubSubRequest(body []byte, grpc bool) *http.Request {

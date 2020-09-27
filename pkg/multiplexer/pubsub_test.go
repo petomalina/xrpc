@@ -34,7 +34,7 @@ func makeGoldenPubSubMessage(data []byte, encoding string) PushMessage {
 	}
 }
 
-func (s *PubSubTestSuite) TestIsGRPCRequest() {
+func (s *PubSubTestSuite) TestIsPubSubRequest() {
 	candidates := map[*http.Request]bool{
 		&http.Request{
 			Method: http.MethodPost,

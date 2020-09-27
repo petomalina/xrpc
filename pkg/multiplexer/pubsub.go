@@ -3,18 +3,9 @@ package multiplexer
 import (
 	"bytes"
 	"encoding/json"
-	"google.golang.org/grpc"
 	"io/ioutil"
 	"net/http"
 	"strings"
-)
-
-const (
-	AttributeEncoding     = "encoding"
-	HeaderEncoding        = "Grpc-Metadata-x-pubsub-encoding"
-	AttributeEncodingGRPC = "grpc"
-	// AttributeEncodingHTTP defines any bytes that were not recognized to be a closer protocol
-	AttributeEncodingHTTP = "http"
 )
 
 // IsPubSubRequest returns true if the given request is considered
@@ -23,19 +14,9 @@ func IsPubSubRequest(r *http.Request) bool {
 	return strings.Contains(r.Header.Get("user-agent"), "APIs-Google") && r.Method == http.MethodPost
 }
 
-// IsPubSubGRPCMessage returns true if the given message is considered
-// encoded in protocol buffers
-func IsPubSubGRPCMessage(m *PubSubMessage) bool {
-	if enc, ok := m.Attributes[AttributeEncoding]; ok {
-		return enc == AttributeEncodingGRPC
-	}
-
-	return false
-}
-
 // PubSubHandler fulfills requests that are considered to be PubSub requests,
 // automatically unwrapping their bodies and appending metadata as headers
-func PubSubHandler(hh map[string]Handler) Handler {
+func PubSubHandler(handler http.Handler) Handler {
 	return func(w http.ResponseWriter, r *http.Request) bool {
 		if !IsPubSubRequest(r) {
 			return false
@@ -48,25 +29,9 @@ func PubSubHandler(hh map[string]Handler) Handler {
 			return true
 		}
 
-		var handler Handler
-		var ok bool
-		if handler, ok = hh[req.Header.Get(HeaderEncoding)]; !ok {
-			return false
-		}
-
-		return handler(w, req)
-	}
-}
-
-func GRPCPubSubHandler(target string, opts ...grpc.DialOption) (Handler, error) {
-	conn, err := grpc.Dial(target, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	return func(w http.ResponseWriter, r *http.Request) bool {
+		handler.ServeHTTP(w, req)
 		return true
-	}, nil
+	}
 }
 
 // PushMessage is a definition of the Google PubSub message received as a push message
@@ -112,18 +77,6 @@ func InterceptPubSubRequest(r *http.Request) (*http.Request, error) {
 	// headerPrefix is set to this prefix for GRPC gateway. The prefix is special and is stripped away
 	// by the grpc gateway
 	var headerPrefix = "Grpc-Metadata-"
-	if IsPubSubGRPCMessage(psmsg.Message) {
-		//headerPrefix = ""
-		// this already has the encoding attribute set to grpc
-
-		// set the content type to grpc and proto to 2 so the h2c will handle this request
-		r.Header.Set("Content-Type", "application/grpc")
-		r.ProtoMajor = 2
-		r.ProtoMinor = 0
-	} else {
-		// set the encoding to bytes as it was not recognized closer
-		psmsg.Message.Attributes[AttributeEncoding] = AttributeEncodingHTTP
-	}
 
 	// the Grpc-Metadata- prefix is stripped by the grpc-gateway, so these headers
 	// are accessible by their original names
@@ -133,9 +86,6 @@ func InterceptPubSubRequest(r *http.Request) (*http.Request, error) {
 	for k, v := range psmsg.Message.Attributes {
 		r.Header.Add(headerPrefix+"x-pubsub-"+k, v)
 	}
-
-	//rr, _ := httputil.DumpRequest(r, true)
-	//fmt.Println(string(rr))
 
 	return r, nil
 }

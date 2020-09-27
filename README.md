@@ -6,8 +6,10 @@
 
 ### Quickstart
 
-### Handling GRPC and HTTP Traffic
+### Multiplexerss
 
-### Handling GRPC, HTTP, and PubSub Traffic
+#### GRPC
 
-### Handling GRPC and PubSub Traffic
+#### Pub/Sub
+
+#### HTTP (grpc-gateway)
