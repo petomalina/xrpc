@@ -8,9 +8,11 @@
   "build": {
     "skip": true
   },
-  "prebuild": {
-    "commands": [
-      "GOOGLE_RUNTIME=go GOOGLE_BUILDABLE=./examples/grpc-http-pubsub pack build gcr.io/petermalina/xrpc --path go.mod --builder gcr.io/buildpacks/builder:v1"
-    ]
+  "hooks": {
+    "prebuild": {
+      "commands": [
+        "GOOGLE_RUNTIME=go GOOGLE_BUILDABLE=./examples/grpc-http-pubsub pack build gcr.io/petermalina/xrpc --path go.mod --builder gcr.io/buildpacks/builder:v1"
+      ]
+    }
   }
 }
