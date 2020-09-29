@@ -1,6 +1,3 @@
 steps:
   - name: golang
-    args:
-      - test
-      - "-v"
-      - ./pkg/multiplexer
+    args: ['go', 'test', '-v', './pkg/multiplexer/']
