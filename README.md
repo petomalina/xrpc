@@ -9,7 +9,7 @@ on a single port in a serverless environment.
 
 You can run the HTTP, GRPC, Pub/Sub example using this button:
 
-[![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run?git_repo=github.com/petomalina/xrpc)
+[![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run?git_repo=github.com/petomalina/xrpc&revision=cloud-run-button)
 
 
 ## :wrench: Installation
