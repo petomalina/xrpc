@@ -36,21 +36,21 @@ func makeGoldenPubSubMessage(data []byte, encoding string) PushMessage {
 
 func (s *PubSubTestSuite) TestIsPubSubRequest() {
 	candidates := map[*http.Request]bool{
-		&http.Request{
+		{
 			Method: http.MethodPost,
 			Header: map[string][]string{
 				"User-Agent": {"APIs-Google; (+https://developers.google.com/webmasters/APIs-Google.html)"},
 			},
 		}: true,
 		// PubSub has a specific User-Agent bound to it
-		&http.Request{
+		{
 			Method: http.MethodPost,
 			Header: map[string][]string{
 				"User-Agent": {"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36"},
 			},
 		}: false,
 		// PubSub will always send a POST request
-		&http.Request{
+		{
 			Method: http.MethodGet,
 			Header: map[string][]string{
 				"User-Agent": {"APIs-Google; (+https://developers.google.com/webmasters/APIs-Google.html)"},
@@ -73,7 +73,7 @@ func (s *PubSubTestSuite) TestInterceptPubSubRequest() {
 	goldenMsgJson, _ := json.Marshal(goldenPubSubMessageJSON)
 
 	candidates := map[*http.Request]InterceptedResult{
-		&http.Request{
+		{
 			Body:   ioutil.NopCloser(bytes.NewBuffer(goldenMsgJson)),
 			Header: map[string][]string{},
 		}: {

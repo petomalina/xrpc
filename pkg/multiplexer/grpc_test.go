@@ -12,14 +12,14 @@ type GRPCTestSuite struct {
 
 func (s *GRPCTestSuite) TestIsGRPCRequest() {
 	candidates := map[*http.Request]bool{
-		&http.Request{
+		{
 			Method:     http.MethodPost,
 			ProtoMajor: 2,
 			Header: map[string][]string{
 				"Content-Type": {"application/grpc"},
 			},
 		}: true,
-		&http.Request{
+		{
 			Method: http.MethodPost,
 			Header: map[string][]string{
 				"Content-Type": {"application/json"},
