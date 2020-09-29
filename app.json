@@ -11,7 +11,7 @@
   "hooks": {
     "prebuild": {
       "commands": [
-        "export GOOGLE_RUNTIME=go && export GOOGLE_BUILDABLE=./examples/grpc-http-pubsub && pack build gcr.io/petermalina/xrpc --path . --builder gcr.io/buildpacks/builder:v1"
+        "pack build -e GOOGLE_RUNTIME=go -e GOOGLE_BUILDABLE=./examples/grpc-http-pubsub gcr.io/petermalina/xrpc --path . --builder gcr.io/buildpacks/builder:v1"
       ]
     }
   }
