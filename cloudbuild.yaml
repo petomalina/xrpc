@@ -2,5 +2,5 @@ steps:
   - name: golang
     args:
       - test
-      - -v
+      - "-v"
       - ./pkg/multiplexer
