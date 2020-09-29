@@ -16,10 +16,14 @@ func IsPubSubRequest(r *http.Request) bool {
 
 // PubSubHandler fulfills requests that are considered to be PubSub requests,
 // automatically unwrapping their bodies and appending metadata as headers
-func PubSubHandler(handler http.Handler) Handler {
+func PubSubHandler(handler http.Handler, selectors ...Selector) Handler {
+	filter := append([]Selector{IsPubSubRequest}, selectors...)
+
 	return func(w http.ResponseWriter, r *http.Request) bool {
-		if !IsPubSubRequest(r) {
-			return false
+		for _, f := range filter {
+			if !f(r) {
+				return false
+			}
 		}
 
 		req, err := InterceptPubSubRequest(r)

@@ -18,6 +18,10 @@ var (
 // request is being fulfilled by the handler or not
 type Handler func(http.ResponseWriter, *http.Request) bool
 
+// Selector is a function that returns true if the request should be
+// handled by the Handler is corresponds to
+type Selector func(*http.Request) bool
+
 // Make creates a new multiplexer with given handlers. It combines all handlers
 // to create a new h2c handler. If the server is not provided, a default http2 server
 // will be created instead.

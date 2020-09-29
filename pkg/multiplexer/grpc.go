@@ -13,10 +13,14 @@ func IsGRPCRequest(r *http.Request) bool {
 }
 
 // GRPCHandler fulfills requests that are considered to be grpc requests
-func GRPCHandler(server *grpc.Server) Handler {
+func GRPCHandler(server *grpc.Server, selectors ...Selector) Handler {
+	filter := append([]Selector{IsGRPCRequest}, selectors...)
+
 	return func(w http.ResponseWriter, r *http.Request) bool {
-		if !IsGRPCRequest(r) {
-			return false
+		for _, f := range filter {
+			if !f(r) {
+				return false
+			}
 		}
 
 		server.ServeHTTP(w, r)
