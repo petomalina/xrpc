@@ -1,0 +1,21 @@
+{
+  "name": "xrpc-example",
+  "options": {
+    "allow-unauthenticated": true,
+    "memory": "512Mi",
+    "cpu": "1"
+  },
+  "env": {
+    "GOOGLE_BUILDABLE": {
+      "description": "example directory to build and deploy",
+      "value": "./grpc-http-pubsub",
+      "required": true,
+    }
+  },
+  "build": {
+    "skip": false,
+    "buildpacks": {
+      "builder": "gcr.io/buildpacks/builder:v1"
+    }
+  }
+}
