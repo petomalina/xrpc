@@ -29,7 +29,7 @@ This behavior lets the *Multiplexer* know if the *Handler* is serving the reques
 
 **Selector** is a filter. A Request must pass all Selectors to get handled by a corresponding *Handler*.
 
-#### GRPC & Default HTTP
+### :bookmark: GRPC & Default HTTP
 
 Let's start with a pure GRPC. This creates a new `EchoService` and registers it with the multiplexer. You can further
 filter requests coming to the `grpcServer` by adding custom Selectors.
@@ -50,7 +50,7 @@ multiplexer.Make(nil,
 
 > :bulb: Note that all unhandled messages will get "404 - no handler was fulfilled for your request"
 
-#### GRPC & HTTP (grpc-gateway)
+### :bookmark: GRPC & HTTP (grpc-gateway)
 
 This example leverates the [grpc-ecosystem/grpc-gateway ](https://github.com/grpc-ecosystem/grpc-gateway) which transcodes GRPC
 messages to their JSON equivalents and the other way around. The example is very similiar to the GRPC one, however,
@@ -81,7 +81,7 @@ multiplexer.Make(nil,
 
 The full example can be found in the **examples/grpc-http** folder.
 
-#### Pub/Sub
+### :bookmark: Pub/Sub
 
 Lastly, we'll register a Pub/Sub push endpoint that will handle any Pub/Sub messages sent by subscriptions. No need to register
 additional services, as Pub/Sub messages can be handled by the grpc-gateway.
@@ -101,7 +101,7 @@ multiplexer.Make(nil,
 
 The full example can be found in the **examples/grpc-http-pubsub** folder.
 
-### Creating Custom Selectors
+### :bookmark: Creating Custom Selectors
 
 There are times, when we need to handle specific cases (e.g. all requests to a certain server must contain some header).
 The xrpc library has *Selectors* exactly for this use-case. Every handler accepts a list of selectors as the second parameter.
