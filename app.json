@@ -1,5 +1,5 @@
 {
-  "name": "xrpc-example",
+  "name": "github.com/petomalina/xrpc/grpc-http-pubsub",
   "options": {
     "allow-unauthenticated": true,
     "memory": "512Mi",
@@ -11,7 +11,7 @@
   "hooks": {
     "prebuild": {
       "commands": [
-        "pack build -e GOOGLE_RUNTIME=go -e GOOGLE_BUILDABLE=./examples/grpc-http-pubsub eu.gcr.io/$GOOGLE_CLOUD_PROJECT/github.com/petomalina/xrpc --path . --builder gcr.io/buildpacks/builder:v1 --publish"
+        "pack build -e GOOGLE_RUNTIME=go -e GOOGLE_BUILDABLE=./examples/grpc-http-pubsub --path . --builder gcr.io/buildpacks/builder:v1 eu.gcr.io/$GOOGLE_CLOUD_PROJECT/github.com/petomalina/xrpc/grpc-http-pubsub"
       ]
     },
     "postbuild": {
