@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"github.com/stretchr/testify/suite"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 	"testing"
 )
 
@@ -14,13 +16,19 @@ type PubSubHandlerSuite struct {
 	suite.Suite
 
 	srv         *http.Server
+	port        string
 	echoService *EchoService
 }
 
 func (s *PubSubHandlerSuite) SetupTest() {
+	lis, err := net.Listen("tcp", ":0")
+	s.NoError(err)
+
+	s.port = strconv.Itoa(lis.Addr().(*net.TCPAddr).Port)
+
 	s.echoService = &EchoService{createLogger(), nil}
 	grpcServer := createGrpcServer(s.echoService)
-	gateway := createGrpcGatewayServer()
+	gateway := createGrpcGatewayServer(s.port)
 
 	s.srv = createTestServer(
 		PubSubHandler(gateway),
@@ -29,7 +37,7 @@ func (s *PubSubHandlerSuite) SetupTest() {
 
 	go func() {
 		// an error is returned when the server is closed externally. This is normal
-		s.Error(http.ErrServerClosed, s.srv.ListenAndServe(), "error listening")
+		s.Error(http.ErrServerClosed, s.srv.Serve(lis), "error listening")
 	}()
 }
 
@@ -39,7 +47,7 @@ func (s *PubSubHandlerSuite) TearDownTest() {
 
 func (s *PubSubHandlerSuite) TestPubSubHandler() {
 	reqBody, _ := json.Marshal(goldenPubSubMessageJSON)
-	req := makePubSubRequest(reqBody, false)
+	req := makePubSubRequest(reqBody, s.port)
 	client := &http.Client{}
 
 	//s.echoService.onCall = func(ctx context.Context, m *api.EchoMessage) {
@@ -57,13 +65,9 @@ func (s *PubSubHandlerSuite) TestPubSubHandler() {
 	s.Equal(string(goldenPubSubMessageData), string(bb))
 }
 
-func makePubSubRequest(body []byte, grpc bool) *http.Request {
-	uri := "http://localhost:" + testingPort
-	if grpc {
-		uri += "/api.EchoService/Call"
-	} else {
-		uri += "/echo"
-	}
+func makePubSubRequest(body []byte, port string) *http.Request {
+	uri := "http://localhost:" + port
+	uri += "/echo"
 
 	u, _ := url.Parse(uri)
 

@@ -5,18 +5,25 @@ import (
 	"github.com/petomalina/xrpc/examples/api"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
+	"net"
 	"net/http"
+	"strconv"
 	"testing"
 )
 
 type GrpcHandlerSuite struct {
 	suite.Suite
 
+	port        string
 	srv         *http.Server
 	echoService *EchoService
 }
 
 func (s *GrpcHandlerSuite) SetupTest() {
+	lis, err := net.Listen("tcp", ":0")
+	s.NoError(err)
+	s.port = strconv.Itoa(lis.Addr().(*net.TCPAddr).Port)
+
 	s.echoService = &EchoService{createLogger(), nil}
 	grpcServer := createGrpcServer(s.echoService)
 
@@ -26,7 +33,7 @@ func (s *GrpcHandlerSuite) SetupTest() {
 
 	go func() {
 		// an error is returned when the server is closed externally. This is normal
-		s.Error(http.ErrServerClosed, s.srv.ListenAndServe(), "error listening")
+		s.Error(http.ErrServerClosed, s.srv.Serve(lis), "error listening")
 	}()
 }
 
@@ -35,7 +42,7 @@ func (s *GrpcHandlerSuite) TearDownTest() {
 }
 
 func (s *GrpcHandlerSuite) TestGrpcHandler() {
-	conn, err := grpc.Dial(testingTarget.String(), grpc.WithInsecure())
+	conn, err := grpc.Dial("localhost:"+s.port, grpc.WithInsecure())
 	s.NoError(err)
 
 	client := api.NewEchoServiceClient(conn)

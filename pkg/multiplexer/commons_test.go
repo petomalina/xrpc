@@ -46,12 +46,12 @@ func createGrpcServer(service *EchoService) *grpc.Server {
 	return grpcServer
 }
 
-func createGrpcGatewayServer() http.Handler {
+func createGrpcGatewayServer(port string) http.Handler {
 	ctx := context.Background()
 
 	// create the grpc-gateway server and register to grpc server
 	gwmux := runtime.NewServeMux()
-	err := api.RegisterEchoServiceHandlerFromEndpoint(ctx, gwmux, testingTarget.String(), []grpc.DialOption{grpc.WithInsecure()})
+	err := api.RegisterEchoServiceHandlerFromEndpoint(ctx, gwmux, "localhost:"+port, []grpc.DialOption{grpc.WithInsecure()})
 	if err != nil {
 		panic(err)
 	}
@@ -64,7 +64,7 @@ func createTestServer(hh ...Handler) *http.Server {
 		hh...,
 	)
 
-	return &http.Server{Addr: ":" + testingPort, Handler: handler}
+	return &http.Server{Handler: handler}
 }
 
 type EchoService struct {
