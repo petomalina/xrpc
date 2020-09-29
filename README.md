@@ -1,5 +1,8 @@
 # :rocket: xrpc
 
+[![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/mod/github.com/petomalina/xrpc)
+[![Go Report Card](https://goreportcard.com/badge/github.com/petomalina/xrpc)](https://goreportcard.com/report/github.com/petomalina/xrpc)
+
 xrpc is a small library used to **multiplex GRPC, HTTP & PubSub traffic on a single port**.
 The implementation allows multiple servers to act as one. It makes it easy to run e.g. GRPC and grpc-gateway (JSON transcoder)
 on a single port in a serverless environment.
