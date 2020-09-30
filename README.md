@@ -26,10 +26,10 @@ is as easy as implementing a function.
 The xrpc library works on a concept of *Multiplexer* with multiple *Handlers*. Every Handler has a
 corresponding set of *Selectors*.
 
-**Multiplexer** is the entrypoint for the traffic that is being served. You will want the *Multiplexer* to
-server all incoming traffic to your server.
+**Multiplexer** is the entry point for the traffic that is being served. You will want the *Multiplexer* to
+serve all incoming traffic to your server.
 
-**Handler** is looks close to the official `type HandlerFunc func(ResponseWriter, *Request)`, however, it returns bool `type Handler func(ResponseWriter, *Request) bool`.
+**Handler** resembles the official `type HandlerFunc func(ResponseWriter, *Request)`, however, it returns bool `type Handler func(ResponseWriter, *Request) bool`.
 This behavior lets the *Multiplexer* know if the *Handler* is serving the request.
 
 **Selector** is a filter. A Request must pass all Selectors to get handled by a corresponding *Handler*.
@@ -57,9 +57,9 @@ multiplexer.Make(nil,
 
 ### :bookmark: GRPC & HTTP (grpc-gateway)
 
-This example leverates the [grpc-ecosystem/grpc-gateway ](https://github.com/grpc-ecosystem/grpc-gateway) which transcodes GRPC
-messages to their JSON equivalents and the other way around. The example is very similiar to the GRPC one, however,
-we'll register the gateway along the GRPC handler.
+This example leverages the [grpc-ecosystem/grpc-gateway ](https://github.com/grpc-ecosystem/grpc-gateway) which transcodes GRPC
+messages to their JSON equivalents and the other way around. The example is very similar to the GRPC one, however,
+we'll register the gateway alongside the GRPC handler.
 
 ```go
 // create and register the grpc server
@@ -127,7 +127,7 @@ s.srv = createTestServer(
 
 ### :bookmark: Creating Custom Selectors
 
-There are times, when we need to handle specific cases (e.g. all requests to a certain server must contain some header).
+There are times when we need to handle specific cases (e.g. all requests to a certain server must contain some header).
 The xrpc library has *Selectors* exactly for this use-case. Every handler accepts a list of selectors as the second parameter.
 
 ```go
@@ -147,5 +147,5 @@ func main() {
 }
 ```
 
-This example creates a new *Selector* that will be executed as a part of the filtration mechanism. Any requests
+This example creates a new *Selector* that will be executed as a part of the filtering mechanism. Any requests
 containing the User-Agent header with "GoogleBot" in them will be redirected to the `myBotHandler`.
