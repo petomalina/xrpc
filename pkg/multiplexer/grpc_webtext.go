@@ -7,7 +7,12 @@ import (
 
 // GRPCWebTextHandler fulfills requests that are considered to be grpc web text requests
 func GRPCWebTextHandler(server *grpcweb.WrappedGrpcServer, selectors ...Selector) Handler {
-	filter := append([]Selector{server.IsAcceptableGrpcCorsRequest, server.IsGrpcWebRequest}, selectors...)
+	filter := append([]Selector{
+		OrSelector(
+			server.IsAcceptableGrpcCorsRequest,
+			server.IsGrpcWebRequest,
+		),
+	}, selectors...)
 
 	return func(w http.ResponseWriter, r *http.Request) bool {
 
