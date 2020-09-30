@@ -104,7 +104,14 @@ multiplexer.Make(nil,
 )
 ```
 
-The full example can be found in the **examples/grpc-http-pubsub** folder.
+The Handler transfers all Pub/Sub metadata into Request headers, exposing them with a `x-pubsub` prefix:
+```
+message.Subscription -> x-pubsub-subscription
+message.Message.MessageID -> x-pubsub-message-id
+message.Message.PublishTime -> x-pubsub-message-publish-time
+
+message.Message.Attributes[key] -> x-pubsub-{key}
+```
 
 ### :bookmark: WebRPC (GRPC WebText)
 
