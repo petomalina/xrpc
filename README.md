@@ -106,6 +106,25 @@ multiplexer.Make(nil,
 
 The full example can be found in the **examples/grpc-http-pubsub** folder.
 
+### :bookmark: WebRPC (GRPC WebText)
+
+The xrpc library fully supports a WebRPC implementation through GRPC WebText. The same boilerplate code
+can be applied for WebRPC support.
+
+```go
+grpcServer := createGrpcServer(echoSvc)
+grpcWebServer := grpcweb.WrapServer(grpcServer,
+    grpcweb.WithOriginFunc(func(origin string) bool {
+        return true
+    }),
+)
+
+s.srv = createTestServer(
+    GRPCHandler(grpcServer),
+    GRPCWebTextHandler(grpcWebServer),
+)
+```
+
 ### :bookmark: Creating Custom Selectors
 
 There are times, when we need to handle specific cases (e.g. all requests to a certain server must contain some header).
