@@ -22,6 +22,19 @@ type Handler func(http.ResponseWriter, *http.Request) bool
 // handled by the Handler is corresponds to
 type Selector func(*http.Request) bool
 
+// OrSelector returns true if one of the selects is fulfilled
+func OrSelector(selectors ...Selector) Selector {
+	return func(r *http.Request) bool {
+		for _, s := range selectors {
+			if s(r) {
+				return true
+			}
+		}
+
+		return false
+	}
+}
+
 // Make creates a new multiplexer with given handlers. It combines all handlers
 // to create a new h2c handler. If the server is not provided, a default http2 server
 // will be created instead.
