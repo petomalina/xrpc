@@ -74,15 +74,16 @@ func (s *PubSubTestSuite) TestInterceptPubSubRequest() {
 
 	candidates := map[*http.Request]InterceptedResult{
 		{
+			URL:    mustUrl("http://localhost"),
 			Body:   ioutil.NopCloser(bytes.NewBuffer(goldenMsgJson)),
 			Header: map[string][]string{},
 		}: {
 			Body: "{\"message\":\"Hello World\"}",
 			Headers: map[string]string{
-				"Grpc-Metadata-x-pubsub-subscription":         goldenPubSubMessageJSON.Subscription,
-				"Grpc-Metadata-x-pubsub-message-id":           goldenPubSubMessageJSON.Message.MessageID,
-				"Grpc-Metadata-x-pubsub-message-publish-time": goldenPubSubMessageJSON.Message.PublishTime,
-				"Grpc-Metadata-x-pubsub-my-label":             goldenPubSubMessageJSON.Message.Attributes["my-label"],
+				"Grpc-Metadata-x-pubsub-subscription":  goldenPubSubMessageJSON.Subscription,
+				"Grpc-Metadata-x-pubsub-message-id":    goldenPubSubMessageJSON.Message.MessageID,
+				"Grpc-Metadata-x-pubsub-publish-time":  goldenPubSubMessageJSON.Message.PublishTime,
+				"Grpc-Metadata-x-pubsub-attr-my-label": goldenPubSubMessageJSON.Message.Attributes["my-label"],
 			},
 		},
 	}

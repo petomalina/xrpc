@@ -2,7 +2,10 @@ package multiplexer
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
+	"github.com/petomalina/xrpc/examples/api"
 	"github.com/stretchr/testify/suite"
 	"io/ioutil"
 	"net"
@@ -45,40 +48,76 @@ func (s *PubSubHandlerSuite) TearDownTest() {
 	s.NoError(s.srv.Close(), "error closing the server")
 }
 
-func (s *PubSubHandlerSuite) TestPubSubHandler() {
-	reqBody, _ := json.Marshal(goldenPubSubMessageJSON)
-	req := makePubSubRequest(reqBody, s.port)
-	client := &http.Client{}
+type responseError struct {
+	res *http.Response
+	err error
 
-	//s.echoService.onCall = func(ctx context.Context, m *api.EchoMessage) {
-	//	headers := metautils.ExtractIncoming(ctx)
-	//	fmt.Println(headers)
-	//}
-
-	res, err := client.Do(req)
-	s.NoError(err)
-	s.NotNil(res)
-	s.Equal(http.StatusOK, res.StatusCode)
-
-	bb, err := ioutil.ReadAll(res.Body)
-	s.NoError(err)
-	s.Equal(string(goldenPubSubMessageData), string(bb))
+	callQueryHeader map[PubSubQueryParam]string
 }
 
-func makePubSubRequest(body []byte, port string) *http.Request {
-	uri := "http://localhost:" + port
-	uri += "/echo"
+func mustUrl(u string) *url.URL {
+	parsed, err := url.Parse(u)
+	if err != nil {
+		panic(err)
+	}
 
-	u, _ := url.Parse(uri)
+	return parsed
+}
 
-	return &http.Request{
-		Method: http.MethodPost,
-		URL:    u,
-		Body:   ioutil.NopCloser(bytes.NewReader(body)),
-		Header: map[string][]string{
-			"User-Agent":   {"APIs-Google; (+https://developers.google.com/webmasters/APIs-Google.html)"},
-			"Content-Type": {"application/json"},
+func (s *PubSubHandlerSuite) TestPubSubHandler() {
+	client := &http.Client{}
+
+	reqBody, err := json.Marshal(goldenPubSubMessageJSON)
+	s.NoError(err)
+
+	candidates := map[*http.Request]responseError{
+		&http.Request{
+			Method: http.MethodPost,
+			URL:    mustUrl("http://localhost:" + s.port + "/echo"),
+			Body:   ioutil.NopCloser(bytes.NewReader(reqBody)),
+			Header: map[string][]string{
+				"User-Agent":   {"APIs-Google; (+https://developers.google.com/webmasters/APIs-Google.html)"},
+				"Content-Type": {"application/json"},
+			},
+		}: {
+			res: &http.Response{
+				StatusCode: http.StatusOK,
+			},
+			err: nil,
 		},
+		&http.Request{
+			Method: http.MethodPost,
+			URL:    mustUrl("http://localhost:" + s.port + "/echo?token=a12345&authorization=Bearer%20abcdefgh"),
+			Body:   ioutil.NopCloser(bytes.NewReader(reqBody)),
+			Header: map[string][]string{
+				"User-Agent":   {"APIs-Google; (+https://developers.google.com/webmasters/APIs-Google.html)"},
+				"Content-Type": {"application/json"},
+			},
+		}: {
+			res: &http.Response{
+				StatusCode: http.StatusOK,
+			},
+			callQueryHeader: map[PubSubQueryParam]string{
+				PubSubQueryToken:         "a12345",
+				PubSubQueryAuthorization: "Bearer abcdefgh",
+			},
+			err: nil,
+		},
+	}
+
+	for req, res := range candidates {
+		clientRes, err := client.Do(req)
+
+		s.Equal(res.err, err)
+		s.Equal(res.res.StatusCode, clientRes.StatusCode, "Request:", req.URL.String())
+
+		s.echoService.onCall = func(ctx context.Context, m *api.EchoMessage) {
+			headers := metautils.ExtractIncoming(ctx)
+
+			for hk, hv := range res.callQueryHeader {
+				s.Equal(hv, headers.Get(PubSubQueryHeader(hk)))
+			}
+		}
 	}
 }
 
