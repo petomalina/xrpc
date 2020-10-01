@@ -53,6 +53,39 @@ type PubSubMessage struct {
 	OrderingKey string            `json:"orderingKey,omitempty"`
 }
 
+type PubSubMetaAttribute string
+
+const (
+	PubSubMetaSubscription PubSubMetaAttribute = "subscription"
+	PubSubMetaMessageID                        = "message-id"
+	PubSubMetaPublishTime                      = "publish-time"
+)
+
+type PubSubQueryParam string
+
+const (
+	PubSubQueryToken         = "token"
+	PubSubQueryAuthorization = "authorization"
+)
+
+// PubSubMetaAttributeHeader creates a key for header access to the PubSUb
+// meta information (see PubSubMetaAttribute)
+func PubSubMetaAttributeHeader(attr PubSubMetaAttribute) string {
+	return "x-pubsub-" + string(attr)
+}
+
+// PubSubAttributeHeader returns a key for header access to the PubSub message
+// attributes (PubSubMessage.Attributes)
+func PubSubAttributeHeader(attr string) string {
+	return "x-pubsub-attr-" + attr
+}
+
+// PubSubQueryHeader returns a key for header access to query parameters passed by
+// the PubSub Request, such as token or Authorization
+func PubSubQueryHeader(param PubSubQueryParam) string {
+	return "x-query-" + string(param)
+}
+
 // InterceptPubSubRequest mutates the given http.Request, reading its body and converting it
 // into the PubSub body. it also adds all PubSub metadata into headers, refills the body
 // with the PubSub data, and corrects the Content-Length header
@@ -74,7 +107,6 @@ func InterceptPubSubRequest(r *http.Request) (*http.Request, error) {
 
 	// get the body from the pubsub and re-create it
 	psbody := psmsg.Message.Data
-
 	r.Body = ioutil.NopCloser(bytes.NewBuffer(psbody))
 	r.ContentLength = int64(len(psbody))
 
@@ -84,11 +116,18 @@ func InterceptPubSubRequest(r *http.Request) (*http.Request, error) {
 
 	// the Grpc-Metadata- prefix is stripped by the grpc-gateway, so these headers
 	// are accessible by their original names
-	r.Header.Add(headerPrefix+"x-pubsub-subscription", psmsg.Subscription)
-	r.Header.Add(headerPrefix+"x-pubsub-message-id", psmsg.Message.MessageID)
-	r.Header.Add(headerPrefix+"x-pubsub-message-publish-time", psmsg.Message.PublishTime)
+	r.Header.Add(headerPrefix+PubSubMetaAttributeHeader(PubSubMetaSubscription), psmsg.Subscription)
+	r.Header.Add(headerPrefix+PubSubMetaAttributeHeader(PubSubMetaMessageID), psmsg.Message.MessageID)
+	r.Header.Add(headerPrefix+PubSubMetaAttributeHeader(PubSubMetaPublishTime), psmsg.Message.PublishTime)
 	for k, v := range psmsg.Message.Attributes {
-		r.Header.Add(headerPrefix+"x-pubsub-"+k, v)
+		r.Header.Add(headerPrefix+PubSubAttributeHeader(k), v)
+	}
+
+	// copy query parameters into headers as well
+	for k, vv := range r.URL.Query() {
+		for _, v := range vv {
+			r.Header.Add(headerPrefix+PubSubQueryHeader(PubSubQueryParam(k)), v)
+		}
 	}
 
 	return r, nil
