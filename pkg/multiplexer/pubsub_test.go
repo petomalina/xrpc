@@ -70,12 +70,12 @@ type InterceptedResult struct {
 }
 
 func (s *PubSubTestSuite) TestInterceptPubSubRequest() {
-	goldenMsgJson, _ := json.Marshal(goldenPubSubMessageJSON)
+	goldenMsgJSON, _ := json.Marshal(goldenPubSubMessageJSON)
 
 	candidates := map[*http.Request]InterceptedResult{
 		{
-			URL:    mustUrl("http://localhost"),
-			Body:   ioutil.NopCloser(bytes.NewBuffer(goldenMsgJson)),
+			URL:    mustURL("http://localhost"),
+			Body:   ioutil.NopCloser(bytes.NewBuffer(goldenMsgJSON)),
 			Header: map[string][]string{},
 		}: {
 			Body: "{\"message\":\"Hello World\"}",

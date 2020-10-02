@@ -53,18 +53,42 @@ type PubSubMessage struct {
 	OrderingKey string            `json:"orderingKey,omitempty"`
 }
 
+// PubSubMetaAttribute are attributes known to be sent in the Pub/Sub wrapper.
+//
+// example:
+// {
+//    "message": {
+//        "attributes": {
+//            "key": "value"
+//        },
+//        "data": "SGVsbG8gQ2xvdWQgUHViL1N1YiEgSGVyZSBpcyBteSBtZXNzYWdlIQ==",
+//        "messageId": "136969346945"
+//		  "publishTime": "...."
+//    },
+//   "subscription": "projects/myproject/subscriptions/mysubscription"
+// }
+//
+// subscription, message.messageId and publishTime are Meta attributes from this
+// message sent by Pub/Sub
 type PubSubMetaAttribute string
 
 const (
+	// PubSubMetaSubscription is the meta attribute 'subscription' in the message root
 	PubSubMetaSubscription PubSubMetaAttribute = "subscription"
-	PubSubMetaMessageID                        = "message-id"
-	PubSubMetaPublishTime                      = "publish-time"
+	// PubSubMetaMessageID is the meta attribute in the 'message.messageId' path
+	PubSubMetaMessageID = "message-id"
+	// PubSubMetaPublishTime is the meta attribute in the 'message.publishTime' path
+	PubSubMetaPublishTime = "publish-time"
 )
 
+// PubSubQueryParam are query parameters known to be sent by the Pub/Sub push messages
 type PubSubQueryParam string
 
 const (
-	PubSubQueryToken         = "token"
+	// PubSubQueryToken is the query parameter in which the audience token is sent by Pub/Sub
+	PubSubQueryToken = "token"
+	// PubSubQueryAuthorization is the query parameter in which the authorization token is sent
+	// by the Pub/Sub
 	PubSubQueryAuthorization = "authorization"
 )
 

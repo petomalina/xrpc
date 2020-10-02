@@ -70,10 +70,12 @@ func main() {
 	}
 }
 
+// EchoService is the example service
 type EchoService struct {
 	*zap.Logger
 }
 
+// Call logs the message and returns it back
 func (e *EchoService) Call(ctx context.Context, m *api.EchoMessage) (*api.EchoMessage, error) {
 	headers := metautils.ExtractIncoming(ctx)
 

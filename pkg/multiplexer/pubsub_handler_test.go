@@ -55,7 +55,7 @@ type responseError struct {
 	callQueryHeader map[PubSubQueryParam]string
 }
 
-func mustUrl(u string) *url.URL {
+func mustURL(u string) *url.URL {
 	parsed, err := url.Parse(u)
 	if err != nil {
 		panic(err)
@@ -73,7 +73,7 @@ func (s *PubSubHandlerSuite) TestPubSubHandler() {
 	candidates := map[*http.Request]responseError{
 		&http.Request{
 			Method: http.MethodPost,
-			URL:    mustUrl("http://localhost:" + s.port + "/echo"),
+			URL:    mustURL("http://localhost:" + s.port + "/echo"),
 			Body:   ioutil.NopCloser(bytes.NewReader(reqBody)),
 			Header: map[string][]string{
 				"User-Agent":   {"APIs-Google; (+https://developers.google.com/webmasters/APIs-Google.html)"},
@@ -87,7 +87,7 @@ func (s *PubSubHandlerSuite) TestPubSubHandler() {
 		},
 		&http.Request{
 			Method: http.MethodPost,
-			URL:    mustUrl("http://localhost:" + s.port + "/echo?token=a12345&authorization=Bearer%20abcdefgh"),
+			URL:    mustURL("http://localhost:" + s.port + "/echo?token=a12345&authorization=Bearer%20abcdefgh"),
 			Body:   ioutil.NopCloser(bytes.NewReader(reqBody)),
 			Header: map[string][]string{
 				"User-Agent":   {"APIs-Google; (+https://developers.google.com/webmasters/APIs-Google.html)"},
