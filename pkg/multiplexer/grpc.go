@@ -1,7 +1,6 @@
 package multiplexer
 
 import (
-	"google.golang.org/grpc"
 	"net/http"
 	"strings"
 )
@@ -13,7 +12,7 @@ func IsGRPCRequest(r *http.Request) bool {
 }
 
 // GRPCHandler fulfills requests that are considered to be grpc requests
-func GRPCHandler(server *grpc.Server, selectors ...Selector) Handler {
+func GRPCHandler(server http.Handler, selectors ...Selector) Handler {
 	filter := append([]Selector{IsGRPCRequest}, selectors...)
 
 	return func(w http.ResponseWriter, r *http.Request) bool {
