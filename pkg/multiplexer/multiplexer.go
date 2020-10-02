@@ -14,6 +14,10 @@ var (
 	ErrNoHandlerFulfilled = errors.New("no handler was fulfilled for your request")
 )
 
+// HandlerFactory is a function that implements wrapping a given http handler
+// into a specific Handler
+type HandlerFactory func(server http.Handler, selectors ...Selector) Handler
+
 // Handler is a http.Handler that returns true/false based on if the
 // request is being fulfilled by the handler or not
 type Handler func(http.ResponseWriter, *http.Request) bool
