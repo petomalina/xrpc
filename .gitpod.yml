@@ -1,0 +1,6 @@
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - init: make gen && go get && go build ./... && go test ./pkg
+    command: go run
