@@ -42,7 +42,7 @@ func (s *Server) ServeHTTP(ctx context.Context, srv *http.Server) error {
 	go func() {
 		<-ctx.Done()
 
-		shutdownCtx, done := context.WithTimeout(context.Background(), 5*time.Second)
+		shutdownCtx, done := context.WithTimeout(context.Background(), s.timeout)
 		defer done()
 
 		if err := srv.Shutdown(shutdownCtx); err != nil {
