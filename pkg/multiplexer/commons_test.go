@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/blendle/zapdriver"
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/petomalina/xrpc/examples/api"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -71,6 +71,8 @@ type EchoService struct {
 	*zap.Logger
 
 	onCall func(ctx context.Context, m *api.EchoMessage)
+
+	api.UnimplementedEchoServiceServer
 }
 
 func (e *EchoService) Call(ctx context.Context, m *api.EchoMessage) (*api.EchoMessage, error) {

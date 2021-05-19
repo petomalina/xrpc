@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/petomalina/xrpc/examples/api"
 	"github.com/petomalina/xrpc/pkg/multiplexer"
 	"go.uber.org/zap"

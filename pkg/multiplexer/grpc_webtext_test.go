@@ -23,7 +23,7 @@ func (s *GRPCWebTextSuite) SetupTest() {
 
 	s.port = strconv.Itoa(lis.Addr().(*net.TCPAddr).Port)
 
-	s.echoService = &EchoService{createLogger(), nil}
+	s.echoService = &EchoService{Logger: createLogger()}
 	grpcServer := createGrpcServer(s.echoService)
 	grpcWebServer := grpcweb.WrapServer(grpcServer,
 		grpcweb.WithOriginFunc(func(origin string) bool {
