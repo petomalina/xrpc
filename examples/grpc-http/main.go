@@ -5,8 +5,8 @@ import (
 	"github.com/blendle/zapdriver"
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/petomalina/xrpc/examples/api"
-	"github.com/petomalina/xrpc/pkg/multiplexer"
+	"github.com/petomalina/xrpc/v2/examples/api"
+	"github.com/petomalina/xrpc/v2/pkg/multiplexer"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
@@ -30,7 +30,7 @@ func main() {
 
 	// create and register the grpc server
 	grpcServer := grpc.NewServer()
-	echoSvc := &EchoService{logger}
+	echoSvc := &EchoService{Logger: logger}
 	api.RegisterEchoServiceServer(grpcServer, echoSvc)
 	reflection.Register(grpcServer)
 
@@ -53,6 +53,8 @@ func main() {
 // EchoService is the example service
 type EchoService struct {
 	*zap.Logger
+
+	api.UnimplementedEchoServiceServer
 }
 
 // Call logs the message and returns it back
