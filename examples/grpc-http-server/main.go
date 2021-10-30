@@ -6,6 +6,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/petomalina/xrpc/v2/examples/api"
 	"github.com/petomalina/xrpc/v2/pkg/multiplexer"
+	"github.com/petomalina/xrpc/v2/pkg/server"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -44,7 +45,7 @@ func main() {
 		logger.Fatal("gw: failed to register", zap.Error(err))
 	}
 
-	srv, err := multiplexer.NewServer(os.Getenv("PORT"), time.Second*5)
+	srv, err := server.New(os.Getenv("PORT"), time.Second*5)
 	if err != nil {
 		logger.Fatal("could not create a server", zap.Error(err))
 	}

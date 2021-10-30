@@ -7,15 +7,19 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/petomalina/xrpc/v2/examples/api"
 	"github.com/petomalina/xrpc/v2/pkg/multiplexer"
+	"github.com/petomalina/xrpc/v2/pkg/server"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, done := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 
 	// create the zap logger for future use
 	config := zapdriver.NewProductionConfig()
@@ -27,6 +31,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	defer func() {
+		done()
+		if r := recover(); r != nil {
+			logger.Fatal("panic recovered, exiting", zap.Any("panic", r))
+		}
+	}()
 
 	// create and register the grpc server
 	grpcServer := grpc.NewServer()
@@ -41,13 +52,22 @@ func main() {
 		logger.Fatal("gw: failed to register: %v", zap.Error(err))
 	}
 
-	// make multiplexer
-	multiplexer.Make(nil,
+	srv, err := server.New(os.Getenv("PORT"), time.Second*30)
+	if err != nil {
+		logger.Fatal("xrpc: cannot create server: %v", zap.Error(err))
+	}
+
+	err = srv.ServeHTTPHandler(ctx, multiplexer.Make(nil,
 		// filters all application/grpc messages into the grpc server
 		multiplexer.GRPCHandler(grpcServer),
 		// defaults all other messages into the http multiplexer
 		multiplexer.HTTPHandler(gwmux),
-	)
+	))
+	if err != nil {
+		logger.Fatal("error serving the server", zap.Error(err))
+	}
+
+	logger.Info("shutting down")
 }
 
 // EchoService is the example service

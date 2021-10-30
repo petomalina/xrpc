@@ -1,4 +1,4 @@
-package multiplexer
+package server
 
 import (
 	"context"
@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-// Server wraps an implementation of a HTTP server with graceful shutdown
-type Server struct {
+// server wraps an implementation of a HTTP server with graceful shutdown
+type server struct {
 	ip       string
 	port     string
 	listener net.Listener
@@ -19,15 +19,15 @@ type Server struct {
 	timeout time.Duration
 }
 
-// NewServer creates a new Server instance on the given port with the given timeout
-func NewServer(port string, timeout time.Duration) (*Server, error) {
+// New creates a new server instance on the given port with the given timeout
+func New(port string, timeout time.Duration) (*server, error) {
 	addr := ":" + port
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create listener for the server: %w", err)
 	}
 
-	return &Server{
+	return &server{
 		ip:       lis.Addr().(*net.TCPAddr).IP.String(),
 		port:     strconv.Itoa(lis.Addr().(*net.TCPAddr).Port),
 		listener: lis,
@@ -37,7 +37,7 @@ func NewServer(port string, timeout time.Duration) (*Server, error) {
 }
 
 // ServeHTTP starts listening while watching the provided context for cancellation
-func (s *Server) ServeHTTP(ctx context.Context, srv *http.Server) error {
+func (s *server) ServeHTTP(ctx context.Context, srv *http.Server) error {
 	errCh := make(chan error, 1)
 	go func() {
 		<-ctx.Done()
@@ -65,8 +65,8 @@ func (s *Server) ServeHTTP(ctx context.Context, srv *http.Server) error {
 	}
 }
 
-// ServeHTTPHandler creates a http.Server in case only handlers or mux is used
-func (s *Server) ServeHTTPHandler(ctx context.Context, handler http.Handler) error {
+// ServeHTTPHandler creates a http.server in case only handlers or mux is used
+func (s *server) ServeHTTPHandler(ctx context.Context, handler http.Handler) error {
 	return s.ServeHTTP(ctx, &http.Server{
 		Handler: handler,
 	})
