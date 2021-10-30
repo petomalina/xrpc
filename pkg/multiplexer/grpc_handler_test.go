@@ -2,7 +2,7 @@ package multiplexer
 
 import (
 	"context"
-	"github.com/petomalina/xrpc/examples/api"
+	"github.com/petomalina/xrpc/v2/examples/api"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"net"

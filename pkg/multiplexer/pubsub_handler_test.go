@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
-	"github.com/petomalina/xrpc/examples/api"
+	"github.com/petomalina/xrpc/v2/examples/api"
 	"github.com/stretchr/testify/suite"
 	"io/ioutil"
 	"net"

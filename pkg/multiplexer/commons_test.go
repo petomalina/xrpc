@@ -5,7 +5,7 @@ import (
 	"github.com/blendle/zapdriver"
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/petomalina/xrpc/examples/api"
+	"github.com/petomalina/xrpc/v2/examples/api"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
