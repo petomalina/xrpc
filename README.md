@@ -15,7 +15,7 @@ You can run the HTTP, GRPC, Pub/Sub example using this button:
 ## :wrench: Installation
 
 ```
-go get github.com/petomalina/xrpc
+go get github.com/petomalina/xrpc/v2
 ```
 
 ## :book: Guide
