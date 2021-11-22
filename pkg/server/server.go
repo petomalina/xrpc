@@ -13,6 +13,7 @@ import (
 // server wraps an implementation of a HTTP server with graceful shutdown
 type server struct {
 	ip       string
+	host     string
 	port     string
 	listener net.Listener
 
@@ -20,20 +21,28 @@ type server struct {
 }
 
 // New creates a new server instance on the given port with the given timeout
-func New(port string, timeout time.Duration) (*server, error) {
+func New(port string, timeout time.Duration, opts ...Option) (*server, error) {
+	s := &server{}
+	for _, opt := range opts {
+		opt(s)
+	}
+
 	addr := ":" + port
+	if s.host != "" {
+		addr = s.host + addr
+	}
+
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create listener for the server: %w", err)
 	}
 
-	return &server{
-		ip:       lis.Addr().(*net.TCPAddr).IP.String(),
-		port:     strconv.Itoa(lis.Addr().(*net.TCPAddr).Port),
-		listener: lis,
+	s.ip = lis.Addr().(*net.TCPAddr).IP.String()
+	s.port = strconv.Itoa(lis.Addr().(*net.TCPAddr).Port)
+	s.listener = lis
+	s.timeout = timeout
 
-		timeout: timeout,
-	}, nil
+	return s, nil
 }
 
 // Start bootstraps a default http server and starts handling requests
