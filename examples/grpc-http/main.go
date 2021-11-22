@@ -52,7 +52,11 @@ func main() {
 		logger.Fatal("gw: failed to register: %v", zap.Error(err))
 	}
 
-	srv, err := server.New(os.Getenv("PORT"), time.Second*30)
+	srv, err := server.New(
+		os.Getenv("PORT"),
+		time.Second*30,
+		server.WithHost("localhost"),
+	)
 	if err != nil {
 		logger.Fatal("xrpc: cannot create server: %v", zap.Error(err))
 	}

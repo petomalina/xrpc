@@ -46,8 +46,8 @@ func New(port string, timeout time.Duration, opts ...Option) (*server, error) {
 }
 
 // Start bootstraps a default http server and starts handling requests
-func Start(ctx context.Context, port string, timeout time.Duration, handler http.Handler) error {
-	srv, err := New(port, timeout)
+func Start(ctx context.Context, port string, timeout time.Duration, handler http.Handler, opts ...Option) error {
+	srv, err := New(port, timeout, opts...)
 	if err != nil {
 		return err
 	}
